@@ -146,7 +146,7 @@ void TSsort::Flush(){
   }
 }
 void TSsort::Status(){
-  cout << "Status of HFC object:" << endl;
+  cout << "Status of TSsort:" << endl;
   cout << "Event memory depth: " << fmemdepth << endl;
   cout << "Events processed:   " << fevtnr << endl;
   if(fdiscarded)

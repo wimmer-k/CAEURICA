@@ -1,45 +1,49 @@
-ARCH	=	`uname -m`
+.EXPORT_ALL_VARIABLES:
 
-OUTDIR  =    	.
-OUTNAME =    	offline
-OUT     =    	$(OUTDIR)/$(OUTNAME)
+.PHONY: clean all docs
 
-CC	=	g++
+ROOTCFLAGS   := $(shell root-config --cflags)
+ROOTLIBS     := $(shell root-config --libs)
+INCLUDES      = -I./
 
-#FLAGS	=	-soname -s
-#FLAGS	=       -Wall,-soname -s
-#FLAGS	=	-Wall,-soname -nostartfiles -s
-FLAGS	=	-Wall -fPIC
+CPP             = g++
+CFLAGS		= -Wall -fPIC $(ROOTCFLAGS) $(INCLUDES) -Wl,-rpath=./
 
-ROOTCFLAGS  = $(shell root-config --cflags)
+LIBS = $(ROOTLIBS) -L./ -lCommandLineInterface
 
-ROOTLIBS    = $(shell root-config --libs)
+O_FILES = daq.o dpp.o TSsort.o
+all: libs sorter
+libs: libCommandLineInterface.so
 
-LIBS	=	-L.. -lCommandLineInterface
+define EXE_COMMANDS
+@echo "Compiling $@"
+$(CPP) $(CFLAGS) $(LIBS) $< $(filter %.o,$^) -o $@
+endef
 
-INCLUDEDIR =	-I$(ROOTSYS)/include
+sorter: sorter.cpp $(O_FILES) | libs
+	$(EXE_COMMANDS)
 
-#SOURCEFILES = $(shell find ./src -type f -iname '*.cpp')
-#SOURCEFILES= main.cpp
-SOURCEFILES = $(shell find ./ -type f -iname '*.cpp')
-OBJS= $(subst .cpp,.o,$(SOURCEFILES))
+define LIB_COMMANDS
+@echo "Making $@"
+@$(CPP) $(CFLAGS) -fPIC -shared -Wl,-soname,$@ -o $@ $^ -lc
+endef
 
-#INCLUDES =	./include/*
-INCLUDES =	./*
+lib%.so: %.o
+	$(LIB_COMMANDS)
 
-#########################################################################
+-include $(wildcard *.d)
 
-all	:	$(OUT)
-clean	:
-		/bin/rm -f $(OBJS) $(OUT)
+%.o: %.cpp %.h
+	@echo "Compiling $@"
+	@$(CPP) $(CFLAGS) -c $< -o $@
 
-$(OUT)	:	$(OBJS)
-		/bin/rm -f $(OUT)
-		if [ ! -d $(OUTDIR) ]; then mkdir -p $(OUTDIR); fi
-		$(CC) $(FLAGS)  $(INCLUDEDIR) $(ROOTCFLAGS) $(ROOTLIBS) -o $(OUT) $(OBJS) $(DEPLIBS)
+CommandLineInterface.o: CommandLineInterface.cpp CommandLineInterface.h
+	@echo "Compiling $@"
+	@$(CPP) $(CFLAGS) -c $< -o $@
 
-$(OBJS)	:	$(INCLUDES) Makefile
 
-%.o	:	%.cpp
-		$(CC) $(INCLUDEDIR) $(ROOTCFLAGS) -c -o $@ $<
+clean:
+	@echo Cleaning up
+	@rm -f *.o lib*.so
+	@rm -f sorter
 

@@ -28,8 +28,8 @@ double get_time(){
 int main(int argc, char *argv[]){
   double time_start = get_time();
   signal(SIGINT,signalhandler);
-  char *filename;
-  char *outfilename;
+  char *filename =NULL;
+  char *outfilename =NULL;
   int maxblocks =0;
   int memdepth =1000;
   bool wtree = true;
@@ -42,7 +42,14 @@ int main(int argc, char *argv[]){
   interface->Add("-t", "write tree", &wtree);
   interface->CheckFlags(argc, argv);
 
-
+  if(filename==NULL){
+    cout << "no inputfile " << endl;
+    return 99;
+  }
+  if(outfilename==NULL){
+    cout << "no inputfile " << endl;
+    return 99;
+  }
 
   FILE *inFile;
   inFile=fopen(filename,"rb");
@@ -104,8 +111,21 @@ int main(int argc, char *argv[]){
     tssort.SetRootFile(rootoutFile);
   tssort.SetMemDepth(memdepth);
   long long prevTimestamp =0;
-  for(int j=0;j<nBlock*header.MAX_BLOCK_t;j++){
   //for(int j=0;j<nBlock;j++){
+  for(int j=0;j<nBlock*header.MAX_BLOCK_t;j++){
+    if(signal_received){
+      break;
+    }
+    if(j%10000 == 0){
+      //cal->PrintCtrs();
+      double time_end = get_time();
+      cout << setw(5) << setiosflags(ios::fixed) << setprecision(1) << (100.*j)/(nBlock*header.MAX_BLOCK_t)<<" % done\t" << 
+	(Float_t)j/(time_end - time_start) << " events/s " <<
+	(nBlock*header.MAX_BLOCK_t-j)*(time_end - time_start)/(Float_t)j << "s to go \r" << flush;
+    }
+
+
+
     //cout << "reading j = " << j << endl; 
     s=fread(buf,sizeof(buffer_type),1,inFile);
     unsigned int tsmsb=buf[0].dgtzdata[7]>>16;
@@ -160,5 +180,8 @@ int main(int argc, char *argv[]){
     fclose(outFile);
   else
     rootoutFile->Close();
+  double time_end = get_time();
+  cout << "Program Run time " << time_end - time_start << " s." << endl;
+  cout << "Calculated " << nBlock*header.MAX_BLOCK_t/(time_end - time_start) << " events/s." << endl;  
   return 77;
 }
