@@ -16,7 +16,7 @@ Merge::Merge(char *filename, int nboards, int memdepth){
   fnboards = nboards;
   ffile = NULL;
   ffilename = filename;
-  ftssort.SetMemDepth(memdepth);
+  //ftssort.SetMemDepth(memdepth);
   
   fyoungestboard = -1;
 }
@@ -90,11 +90,22 @@ void Merge::ReadFooters(){
 }
 void Merge::SetFile(FILE* out){
   ffile = out;
-  ftssort.SetFile(ffile);
+  //ftssort.SetFile(ffile);
 }
 void Merge::SetRootFile(TFile* out){
   ffile = NULL;
-  ftssort.SetRootFile(out);
+  frootfile = out;
+  ftr = new TTree("tr","merged events");
+  fboard = -1;
+  fch = -1;
+  fen = -1;
+  fts = -1;
+  ftr->Branch("board",&fboard,"board/I");
+  ftr->Branch("ch",&fch,"ch/I");
+  ftr->Branch("en",&fen,"en/I");
+  ftr->Branch("ts",&fts,"ts/L");
+  ftr->BranchRef();
+  //ftssort.SetRootFile(out);
 }
 void Merge::ReadFirst(){
   for(unsigned short i = 0;i<fnboards;i++){
@@ -102,16 +113,25 @@ void Merge::ReadFirst(){
   }
 }
 void Merge::Read(){
-  if(fyoungestboard==-1){
-    for(unsigned short i = 0;i<fnboards;i++){
-      if(!ffinished[i])
-	ReadFromFile(i);
-    }
-  }
-  else if(!ffinished[fyoungestboard])
+  sort(fitems.begin(), fitems.end(),TSComparer());
+
+  WriteFile(fitems.back());
+  fitems.pop_back();
+
+  if(!ffinished[fyoungestboard])
     ReadFromFile(fyoungestboard);
-  else
-    fyoungestboard=-1;
+  else{
+    fyoungestTS[fyoungestboard] = LLONG_MAX;
+    long long youngest = LLONG_MAX;
+    for(int i=0;i<fnboards;i++){
+      if(fyoungestTS[i]<youngest){
+	fyoungestboard = i;
+	youngest = fyoungestTS[i];
+      }
+    }
+    ReadFromFile(fyoungestboard);
+  }
+
 }
 bool Merge::ReadFromFile(int board){
   if(ftimesread[board]>=ffilesize[board]){
@@ -124,7 +144,7 @@ bool Merge::ReadFromFile(int board){
 
   unsigned int tsmsb=buf[0].dgtzdata[7]>>16;
   long long longTimestamp=(long long) tsmsb<<31 | (buf[0].dgtzdata[3]&0x7FFFFFFF);
-  cout <<ftimesread[board]<<"\t"<< buf[0].dgtzdata[0] << "\t" << buf[0].dgtzdata[1] << "\t" << longTimestamp <<"\t" << buf[0].dgtzdata[4] << endl;
+  //cout <<ftimesread[board]<<"\t"<< buf[0].dgtzdata[0] << "\t" << buf[0].dgtzdata[1] << "\t" << longTimestamp <<"\t" << buf[0].dgtzdata[4] << endl;
   
   fyoungestTS[board] = longTimestamp;
   fyoungestboard = board;
@@ -132,11 +152,11 @@ bool Merge::ReadFromFile(int board){
     if(longTimestamp>fyoungestTS[i])
       fyoungestboard = i;
   }
-  cout << "youngest board " << fyoungestboard << "\tTS = " << fyoungestTS[fyoungestboard] << endl;
-  if(!ftssort.Add(buf[0])){
-    cout << "error adding buffer with timestamp " << longTimestamp << endl;
-  }
+  item* toadd = new item;
+  toadd->buf = buf[0];
+  toadd->TS = longTimestamp;
 
+  fitems.push_back(toadd);
 
   ftimesread[board]++;
   if(ftimesread[board]==ffilesize[board]){
@@ -147,10 +167,32 @@ bool Merge::ReadFromFile(int board){
   return true;
 }
 void Merge::Flush(){
+  cout << __PRETTY_FUNCTION__ << endl;
   for(unsigned short i = 0;i<fnboards;i++){
     fclose(finFiles[i]);
   }
-
-  ftssort.Flush();
-  ftssort.Status();
+  sort(fitems.begin(), fitems.end(),TSComparer());
+  for(int i=fitems.size()-1;i>-1;i--){
+    WriteFile(fitems.at(i));
+  }
+  if(frootfile){
+    frootfile->cd();
+    ftr->Write();
+    //fhtdiff->Write();
+  }
 }
+void Merge::WriteFile(item* writeme){
+  if(ffile){
+    fwrite(&(writeme->buf), sizeof(buffer_type), 1, ffile);
+  }
+  else{
+    fboard = (writeme->buf).dgtzdata[0];
+    fch = (writeme->buf).dgtzdata[1];
+    fen = (writeme->buf).dgtzdata[4];
+    fts = writeme->TS;
+    ftr->Fill();
+    //fhtdiff->Fill(writeme->TS - flastts);
+  }
+  //flastts = writeme->TS;
+}
+

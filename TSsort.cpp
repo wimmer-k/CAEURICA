@@ -119,14 +119,15 @@ bool TSsort::Insert(item* insertme){
   it++;
   flist.insert(it,insertme);
 
-  // cout <<"--------------------------------" << endl;
-  // it = flist.begin();
-  // while(it != flist.end()){
-  //   cout << "list " << (*it)->TS << endl;
-  //   it++;
-  // }
-
   return true;
+}
+void TSsort::PrintList(){
+  cout <<"-------list---------------------" << endl;
+  list<item*>::iterator it = flist.begin();
+  while(it != flist.end()){
+    cout << "list " << (*it)->TS << endl;
+    it++;
+  }
 }
 void TSsort::WriteFile(item* writeme){
   //cout << "writing board " << (writeme->buf).dgtzdata[0] << "\t TS = " << writeme->TS << endl;

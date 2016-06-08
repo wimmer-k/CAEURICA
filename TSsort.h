@@ -8,8 +8,7 @@
 #include "daq.h"
 
 using namespace std;
-struct item
-{
+struct item{
   long long TS;
   buffer_type buf;
 };
@@ -25,6 +24,7 @@ class TSsort{
   bool FullList(item* addme);
   bool Insert(item* insertme);
   void WriteFile(item* writeme);
+  void PrintList();
   void Flush();
   void Status();
   void SetMemDepth(int memdepth){fmemdepth = memdepth;}
@@ -47,5 +47,11 @@ class TSsort{
   TH1F* fhtdiff;
 };
 
+class TSComparer {
+public:
+  bool operator() ( item *lhs, item *rhs) {
+    return (*rhs).TS < (*lhs).TS;
+  }
+};
 
 #endif

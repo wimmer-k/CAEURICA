@@ -6,6 +6,7 @@
 #include "TFile.h"
 #include "daq.h"
 #include "TSsort.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -20,6 +21,7 @@ class Merge{
   void Read();
   bool Finished(){return fnboards == ffinishedsum;};
   bool ReadFromFile(int board);
+  void WriteFile(item* writeme);
   void Flush();
  private:
   char * ffilename;
@@ -30,9 +32,16 @@ class Merge{
   vector<int> ffinished;
   int ffinishedsum;
   FILE *ffile;
+  TFile *frootfile;
 
-  TSsort ftssort;
   vector<long long> fyoungestTS;
   int fyoungestboard;
+  vector<item*> fitems;
+
+  TTree *ftr;
+  int fboard;
+  int fch;
+  int fen;
+  long long fts;
 };
 #endif

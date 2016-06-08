@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
   interface->Add("-lb", "last buffer to be read", &maxhits);
   interface->Add("-i", "input file base", &filename);
   interface->Add("-o", "output file", &outfilename);
-  interface->Add("-m", "memdepth", &memdepth);
+  //interface->Add("-m", "memdepth", &memdepth);
   interface->Add("-t", "write tree", &wtree);
   interface->Add("-n", "number of cards", &nboards);
   interface->CheckFlags(argc, argv);
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
 
   int total = merge.ReadHeaders();
   int ctr=0;
-  cout <<"ftimesread[board]"<<"\t"<<"board"<< "\t" << "ch" << "\t" << "TS" <<"\t" << "en" << endl;
+  //cout <<"ftimesread[board]"<<"\t"<<"board"<< "\t" << "ch" << "\t" << "TS" <<"\t" << "en" << endl;
   merge.ReadFirst();
   while(!merge.Finished()){
     if(ctr%100000 == 0){
