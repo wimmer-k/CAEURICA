@@ -3,6 +3,8 @@
 #include <iostream>
 #include <list>
 #include "TFile.h"
+#include "TTree.h"
+#include "TH1F.h"
 #include "daq.h"
 
 using namespace std;
@@ -14,8 +16,11 @@ struct item
 
 class TSsort{
  public:
+  TSsort();
   TSsort(FILE *out);
   TSsort(TFile *out);
+  void SetFile(FILE *out);
+  void SetRootFile(TFile *out);
   bool Add(buffer_type addme);
   bool FullList(item* addme);
   bool Insert(item* insertme);
@@ -31,6 +36,15 @@ class TSsort{
   FILE *ffile;
   TFile *frootfile;
   int fmemdepth;
+
+  long long flastts;
+
+  TTree *ftr;
+  int fboard;
+  int fch;
+  int fen;
+  long long fts;
+  TH1F* fhtdiff;
 };
 
 

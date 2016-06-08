@@ -47,8 +47,11 @@ int main(int argc, char *argv[]){
   FILE *inFile;
   inFile=fopen(filename,"rb");
   FILE *outFile;
+  TFile *rootoutFile;
   if(!wtree)
     outFile=fopen(outfilename,"w");
+  else
+    rootoutFile = new TFile(outfilename,"RECREATE");
 
   //read header if available here
   header_type header;
@@ -94,7 +97,11 @@ int main(int argc, char *argv[]){
   if(maxblocks>0)
     nBlock = maxblocks;
 
-  TSsort tssort(outFile);
+  TSsort tssort;
+  if(!wtree)
+    tssort.SetFile(outFile);
+  else
+    tssort.SetRootFile(rootoutFile);
   tssort.SetMemDepth(memdepth);
   long long prevTimestamp =0;
   for(int j=0;j<nBlock*header.MAX_BLOCK_t;j++){
@@ -149,6 +156,9 @@ int main(int argc, char *argv[]){
   tssort.Status();
 
   fclose(inFile);
-  fclose(outFile);
+  if(!wtree)
+    fclose(outFile);
+  else
+    rootoutFile->Close();
   return 77;
 }
