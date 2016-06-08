@@ -1,6 +1,7 @@
 #include "TSsort.h"
 #include "stdio.h"
 #include "string.h"
+
 TSsort::TSsort(){
   fevtnr = 0;
   fdiscarded = 0;
@@ -114,11 +115,21 @@ bool TSsort::Insert(item* insertme){
     //cout << "list " << (*it)->TS << endl;
     it--;
   }
+  
   it++;
   flist.insert(it,insertme);
+
+  // cout <<"--------------------------------" << endl;
+  // it = flist.begin();
+  // while(it != flist.end()){
+  //   cout << "list " << (*it)->TS << endl;
+  //   it++;
+  // }
+
   return true;
 }
 void TSsort::WriteFile(item* writeme){
+  //cout << "writing board " << (writeme->buf).dgtzdata[0] << "\t TS = " << writeme->TS << endl;
   if(ffile){
     fwrite(&(writeme->buf), sizeof(buffer_type), 1, ffile);
   }

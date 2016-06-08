@@ -4,12 +4,12 @@
 #include <algorithm> 
 #include <signal.h>
 #include <sys/time.h>
-#include"TFile.h"
-#include"TTree.h"
-#include"TROOT.h"
-#include"TH1.h"
-#include"TH2.h"
-#include"CommandLineInterface.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TROOT.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "CommandLineInterface.h"
 
 using namespace std;
 bool signal_received = false;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
   char *outfilename =NULL;
   int maxblocks =0;
   int memdepth =1000;
-  bool wtree = true;
+  int wtree = true;
   //Read in the command line arguments
   CommandLineInterface* interface = new CommandLineInterface();
   interface->Add("-lb", "last buffer to be read", &maxblocks);
@@ -55,11 +55,14 @@ int main(int argc, char *argv[]){
   inFile=fopen(filename,"rb");
   FILE *outFile;
   TFile *rootoutFile;
-  if(!wtree)
+  if(!wtree){
+    cout << "writing .nig file" << endl;
     outFile=fopen(outfilename,"w");
-  else
+  }
+  else{
+    cout << "writing .root file" << endl;
     rootoutFile = new TFile(outfilename,"RECREATE");
-
+  }
   //read header if available here
   header_type header;
   size_t ss;
@@ -101,8 +104,9 @@ int main(int argc, char *argv[]){
   buffer_type buf[1];
   size_t s;
   
+  int nevents = nBlock*header.MAX_BLOCK_t;
   if(maxblocks>0)
-    nBlock = maxblocks;
+    nevents = maxblocks;
 
   TSsort tssort;
   if(!wtree)
@@ -111,17 +115,17 @@ int main(int argc, char *argv[]){
     tssort.SetRootFile(rootoutFile);
   tssort.SetMemDepth(memdepth);
   long long prevTimestamp =0;
-  //for(int j=0;j<nBlock;j++){
-  for(int j=0;j<nBlock*header.MAX_BLOCK_t;j++){
+  for(int j=0;j<nevents;j++){
+  //for(int j=0;j<nBlock*header.MAX_BLOCK_t;j++){
     if(signal_received){
       break;
     }
     if(j%10000 == 0){
       //cal->PrintCtrs();
       double time_end = get_time();
-      cout << setw(5) << setiosflags(ios::fixed) << setprecision(1) << (100.*j)/(nBlock*header.MAX_BLOCK_t)<<" % done\t" << 
+      cout << setw(5) << setiosflags(ios::fixed) << setprecision(1) << (100.*j)/nevents<<" % done\t" << 
 	(Float_t)j/(time_end - time_start) << " events/s " <<
-	(nBlock*header.MAX_BLOCK_t-j)*(time_end - time_start)/(Float_t)j << "s to go \r" << flush;
+	(nevents-j)*(time_end - time_start)/(Float_t)j << "s to go \r" << flush;
     }
 
 
@@ -146,8 +150,6 @@ int main(int argc, char *argv[]){
   header_type footer;
 
   s=fread(&footer,sizeof(header_type),1,inFile);
-  if(!wtree)
-    fwrite(&footer,sizeof(header_type),1,outFile);
   if(s<1){
     cout<<"Can't read footer!"<<endl;
   }
@@ -174,6 +176,8 @@ int main(int argc, char *argv[]){
   cout.flush();
   tssort.Flush();
   tssort.Status();
+  if(!wtree)
+    fwrite(&footer,sizeof(header_type),1,outFile);
 
   fclose(inFile);
   if(!wtree)
@@ -182,6 +186,6 @@ int main(int argc, char *argv[]){
     rootoutFile->Close();
   double time_end = get_time();
   cout << "Program Run time " << time_end - time_start << " s." << endl;
-  cout << "Calculated " << nBlock*header.MAX_BLOCK_t/(time_end - time_start) << " events/s." << endl;  
+  cout << "Calculated " << nevents/(time_end - time_start) << " events/s." << endl;  
   return 77;
 }

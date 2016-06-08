@@ -11,16 +11,18 @@ CFLAGS		= -Wall -fPIC $(ROOTCFLAGS) $(INCLUDES) -Wl,-rpath=./
 
 LIBS = $(ROOTLIBS) -L./ -lCommandLineInterface
 
-O_FILES = daq.o dpp.o TSsort.o
-all: libs sorter
+O_FILES = daq.o dpp.o TSsort.o Merge.o
+all: libs sorter merger
 libs: libCommandLineInterface.so
 
 define EXE_COMMANDS
 @echo "Compiling $@"
-$(CPP) $(CFLAGS) $(LIBS) $< $(filter %.o,$^) -o $@
+@$(CPP) $(CFLAGS) $(LIBS) $< $(filter %.o,$^) -o $@
 endef
 
 sorter: sorter.cpp $(O_FILES) | libs
+	$(EXE_COMMANDS)
+merger: merger.cpp $(O_FILES) | libs
 	$(EXE_COMMANDS)
 
 define LIB_COMMANDS
@@ -45,5 +47,5 @@ CommandLineInterface.o: CommandLineInterface.cpp CommandLineInterface.h
 clean:
 	@echo Cleaning up
 	@rm -f *.o lib*.so
-	@rm -f sorter
+	@rm -f sorter merger
 
