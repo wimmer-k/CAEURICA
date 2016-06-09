@@ -1,0 +1,29 @@
+CAEN EURICA DAQ sorter and merger
+
+CAEN DAQ system writes out 5 files (one for each card), with the data (board, ch, energy and timestamp), but not in time order
+
+program "sorter"
+sorts each of the files by their time stamp.
+usage:
+        [-lb <int  >: last buffer to be read]
+        [-i  <char*>: input file]
+        [-o  <char*>: output file]
+        [-m  <int  >: memdepth]
+        [-t  <int  >: write tree]
+memdepth are the number of hits kept in memroy. increase if you get error messages, 10000 is a good starting number
+-t 1 writes a root tree instead of the original data format
+
+program "merger"
+merges the 5 files into one.
+usage:
+        [-lb <int  >: last buffer to be read]
+        [-i  <char*>: input file base]
+        [-o  <char*>: output file]
+        [-t  <int  >: write tree]
+        [-n  <int  >: number of cards]
+-t 1 writes the required root tree (use -t 0 to write the original data format)
+number of cards -n 5 for all 5 files (default)
+
+script "sortandmerge.sh"
+usage:
+./sortandmerge <runnumber>

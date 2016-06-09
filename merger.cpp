@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
   char *outfilename =NULL;
   int maxhits =0;
   int wtree = true;
-  int nboards = 2;
+  int nboards = 5;
   int memdepth =1000;
   //Read in the command line arguments
   CommandLineInterface* interface = new CommandLineInterface();
