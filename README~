@@ -1,5 +1,4 @@
 CAEN EURICA DAQ sorter and merger
-K. Wimmer, wimmer@phys.s.u-tokyo.ac.jp
 
 CAEN DAQ system writes out 5 files (one for each card), with the data (board, ch, energy and timestamp), but not in time order
 
@@ -11,7 +10,7 @@ usage:
         [-o  <char*>: output file]
         [-m  <int  >: memdepth]
         [-t  <int  >: write tree]
-memdepth are the number of hits kept in memory. increase if you get error messages, 10000 is a good starting number
+memdepth are the number of hits kept in memroy. increase if you get error messages, 10000 is a good starting number
 -t 1 writes a root tree instead of the original data format
 
 program "merger"
